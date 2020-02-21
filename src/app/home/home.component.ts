@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import {MatchesService} from '../httpClient/services/matches.service';
-
-import * as Highcharts from 'highcharts';
-
-
+import { MatchesService} from '../httpClient/services/matches.service';
+import {Label} from 'ng2-charts';
+import {SummonerData} from '../model/summoner-data';
 
 
 @Component({
@@ -16,91 +14,71 @@ import * as Highcharts from 'highcharts';
 
 
 export class HomeComponent implements OnInit {
-  championNames = [
-    '01-01-2020',
-    '01-02-2020',
-    '01-03-2020',
-    '01-04-2020',
-    '01-05-2020',
-    '01-06-2020',
-    '01-07-2020'
-  ];
-  Highcharts: typeof Highcharts = Highcharts;
-  chartType = 'chart';
 
-  chartOptions: Highcharts.Options = {
-    chart: {
-      type: 'column',
-    },
-    xAxis: {
-      categories: this.championNames,
-      title: {
-        text: 'Dates'
-      }
-    },
-    yAxis: {
-      title: {
-        text: 'Champion Usage'
-      }
-    }
-    ,
-    title: {
-      text: 'Champion Usage'
-    },
-    subtitle: {
-      text: 'Amount of times you have played a champion within 7 days'
-    },
+  // variables
+   chartType;
 
-    series: [
-      {
-        type: 'column',
-        allowPointSelect: true,
-        name: 'Syndra', // Name of the series
+   chartData = []; // ChartDataSet[]
 
-        /*
-            how many times have you used the champion per day?
-            Monday: 11,
-            Tuesday: 2,
-            Wed: 3,
-            Thurs: 5,
-            Friday: 2
-            Sat: 1,
-            Sun: 1
-         */
+   chartLabels = []; // The X-axis values, Label[]
 
-        data: [11, 2, 3, 5, 2, 1, 1]
-      },
+   isChartReady = false;
 
-      {
-        type: 'column',
-        name: 'Riven',
-        data: [3, 2, 1, 1, 2, 5, 6]
-      },
-
-      {
-        type: 'column',
-        name: 'Garen',
-        data: [2, 2, 10, 5, 6, 7, 2]
-      },
-
-      {
-        type: 'column',
-        name: 'Teemo',
-        data: [10, 10, 2, 3, 1, 1, 2]
-      },
-
-      {
-        type: 'column',
-        name: 'Warwick',
-        data: [4, 0, 0, 0, 0, 0, 2]
-      }
-    ]
-  };
+   summonerData: SummonerData; // object holding values from backend
 
 
-  constructor(private matchService: MatchesService) { }
+  constructor(private matchService: MatchesService) {}
 
+  // https://stackoverflow.com/questions/46909164/data-or-datasets-field-are-required-to-render-char-bar-in-angular-4
 
   ngOnInit() {
+    this.setChartType('bar');
+    this.setData();
   }
+
+
+  private setChartType(chartType) {
+    this.chartType = chartType;
+  }
+
+
+
+
+  setData() {
+    this.matchService.getSummonerMatchData().subscribe((value: SummonerData) => {
+      this.summonerData = new SummonerData(value.summonerName, value.championChartData);
+      this.chartLabels = this.summonerData.championChartData.labels;
+      this.chartData = this.summonerData.championChartData.chartData;
+      this.isChartReady = true; // will render chart when info is available
+    },
+        error1 =>  {
+      console.log('Error');
+      this.isChartReady = false;
+    });
+  }
+
+
+
+
+
+
+
+  /**
+   * Here there could be a function that returns an array, and we just push it to the chartData array.
+   */
+  enterNewChampion() {
+    const data = {
+      data: [10, 2, 8, 0, 0, 2, 1], label: 'Warwick'
+    };
+    this.chartData.push(data);
+  }
+
+  /**
+   * Just push a new label/date to the labels array.
+   */
+  enterNewDate() {
+    const date: Label = '01-08-2020';
+    this.chartLabels.push(date);
+  }
+
 }
