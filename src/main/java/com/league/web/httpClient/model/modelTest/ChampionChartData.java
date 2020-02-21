@@ -1,4 +1,4 @@
-package com.league.web.httpClient.model;
+package com.league.web.httpClient.model.modelTest;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class Match {
-  private Long championId;
-  private Long timestamp;
+public class ChampionChartData {
+  private ChartData[] chartData;
+  private String[] labels;
 }
