@@ -20,7 +20,12 @@ export class MatchesService {
 
   constructor(private httpClient: HttpClient) {}
 
-  getSummonerMatchData(): Observable <SummonerData> {
-    return this.httpClient.get<SummonerData>('http://localhost:9090/summonerData/pTeemo', httpOptions);
+  // getSummonerMatchData(): Observable <SummonerData> {
+  //   return this.httpClient.get<SummonerData>('http://localhost:9090/matches/pTeemo', httpOptions);
+  // }
+
+
+  getSummonerData(): Observable<SummonerData> {
+    return this.httpClient.get<SummonerData>('http://localhost:9090/summoner/pTeemo', httpOptions);
   }
 }
