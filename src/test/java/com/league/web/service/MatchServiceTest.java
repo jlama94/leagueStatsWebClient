@@ -33,7 +33,7 @@ class MatchServiceTest {
     String userName = "pTeemo";
     Match match = new Match();
     match.setChampionId(new Long(12345));
-    match.setTimestamp(new Long(171717171));
+    match.setTimestamp(new Long(17171717));
 
     List<Match> matchList = Arrays.asList(match);
 
