@@ -1,7 +1,6 @@
-package com.league.web.httpClientUsage;
+package com.league.web.client;
 
-
-import com.league.web.httpClient.connector.LeagueStatsServiceConnector;
+import com.league.web.client.connector.LeagueStatsServiceConnector;
 import com.league.web.httpClient.model.MatchResponse;
 import feign.Feign;
 import feign.jackson.JacksonDecoder;

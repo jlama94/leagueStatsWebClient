@@ -2,7 +2,7 @@ package com.league.web.service;
 
 import com.league.web.httpClient.model.Match;
 import com.league.web.httpClient.model.MatchResponse;
-import com.league.web.httpClientUsage.MatchClient;
+import com.league.web.client.MatchClient;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
