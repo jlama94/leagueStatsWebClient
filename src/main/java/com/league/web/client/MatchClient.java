@@ -1,7 +1,7 @@
 package com.league.web.client;
 
 import com.league.web.client.connector.LeagueStatsServiceConnector;
-import com.league.web.httpClient.model.MatchResponse;
+import com.league.web.httpClient.riotResponse.RiotResponse;
 import feign.Feign;
 import feign.jackson.JacksonDecoder;
 import org.springframework.stereotype.Component;
@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 public class MatchClient {
 
 
-  public MatchResponse getMatchesByUserName(String userName) {
+  public RiotResponse getMatchesByUserName(String userName) {
     LeagueStatsServiceConnector leagueStatsServiceConnector = Feign.builder()
       .decoder(new JacksonDecoder())
       .target(LeagueStatsServiceConnector.class, "http://localhost:8080");
 
-    MatchResponse matchResponse = leagueStatsServiceConnector.getMatchesFromLeagueServiceClient(userName);
+    RiotResponse riotResponse = leagueStatsServiceConnector.getMatchesFromLeagueServiceClient(userName);
 
-    return matchResponse;
+    return riotResponse;
   }
 }

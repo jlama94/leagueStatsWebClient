@@ -1,7 +1,7 @@
 package com.league.web.service;
 
-import com.league.web.httpClient.model.MatchResponse;
 import com.league.web.client.MatchClient;
+import com.league.web.httpClient.riotResponse.RiotResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,9 +17,9 @@ public class MatchService {
   /**
    *
    * @param userName
-   * @return a MatchResponse using the MatchClient
+   * @return a RiotResponse using the MatchClient
    */
-  public MatchResponse getMatches(String userName) {
-    return matchClient.getMatchesByUserName(userName);
+  public RiotResponse getMatches(String userName) {
+   return matchClient.getMatchesByUserName(userName);
   }
 }

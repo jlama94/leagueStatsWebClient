@@ -1,8 +1,8 @@
 package com.league.web.service;
 
-import com.league.web.httpClient.model.Match;
-import com.league.web.httpClient.model.MatchResponse;
 import com.league.web.client.MatchClient;
+import com.league.web.httpClient.riotResponse.RiotMatch;
+import com.league.web.httpClient.riotResponse.RiotResponse;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-class MatchServiceTest {
+class RiotMatchServiceTest {
 
   @Mock private MatchClient matchClient;
   @Mock private MatchService matchService;
@@ -31,20 +31,20 @@ class MatchServiceTest {
   @Test
   void getMatchesSuccessfully() {
     String userName = "pTeemo";
-    Match match = new Match();
-    match.setChampionId(new Long(12345));
-    match.setTimestamp(new Long(17171717));
+    RiotMatch match = new RiotMatch();
+    match.setDate(new Long(12345));
+    match.setChampion(new Long(17171717));
 
-    List<Match> matchList = Arrays.asList(match);
+    List<RiotMatch> matchList = Arrays.asList(match);
 
-    MatchResponse dummyResponse = matchClient.getMatchesByUserName(userName);
+    RiotResponse dummyResponse = matchClient.getMatchesByUserName(userName);
 
-    dummyResponse.setMatches(matchList);
-    dummyResponse.setSummonerName(userName);
+    dummyResponse.setMatchData(matchList);
+    dummyResponse.setUsername(userName);
 
     Mockito.when(matchClient.getMatchesByUserName(userName)).thenReturn(dummyResponse);
 
-    MatchResponse actualResponse = matchService.getMatches(userName);
+    RiotResponse actualResponse = matchService.getMatches(userName);
 
 
     Assert.assertEquals(dummyResponse, actualResponse);

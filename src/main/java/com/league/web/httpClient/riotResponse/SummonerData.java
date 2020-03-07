@@ -1,4 +1,4 @@
-package com.league.web.httpClient.model;
+package com.league.web.httpClient.riotResponse;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,5 +14,5 @@ import java.util.List;
 public class SummonerData {
   private String userName;
   private List<Long> championId;
-  private List<String> timeStap;
+  private List<String> timeStamp;
 }

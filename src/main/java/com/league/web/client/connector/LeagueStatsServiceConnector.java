@@ -1,6 +1,6 @@
 package com.league.web.client.connector;
 
-import com.league.web.httpClient.model.MatchResponse;
+import com.league.web.httpClient.riotResponse.RiotResponse;
 import feign.Param;
 import feign.RequestLine;
 
@@ -13,5 +13,5 @@ public interface LeagueStatsServiceConnector {
 
   */
   @RequestLine("GET /matches/{summonerName}")
-  MatchResponse getMatchesFromLeagueServiceClient(@Param("summonerName") String summonerName);
+  RiotResponse getMatchesFromLeagueServiceClient(@Param("summonerName") String summonerName);
 }

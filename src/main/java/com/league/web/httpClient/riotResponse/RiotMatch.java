@@ -1,16 +1,16 @@
-package com.league.web.httpClient.model;
+package com.league.web.httpClient.riotResponse;
 
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@NoArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
 @EqualsAndHashCode
-public class Match {
+public class RiotMatch {
   private Long champion;
+  private Long date;
   private String role;
-  private String date;
 }

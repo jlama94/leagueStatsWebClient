@@ -1,7 +1,9 @@
 package com.league.web.controller;
 
+import com.league.web.httpClient.model.Match;
 import com.league.web.httpClient.model.MatchResponse;
-import com.league.web.httpClient.model.SummonerData;
+import com.league.web.httpClient.riotResponse.RiotMatch;
+import com.league.web.httpClient.riotResponse.RiotResponse;
 import com.league.web.service.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -9,12 +11,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
+
 
 // https://howtodoinjava.com/spring5/webmvc/spring-mvc-cors-configuration/
 // https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/CrossOrigin.html#allowedHeaders--
@@ -30,16 +33,18 @@ public class ChampionUsageController {
   }
 
 
-  // this sends like 100 matches
+  /**
+   * Helper method of @getSummonerData retrieve a list of matches.
+   * @param userName
+   * @return riotResponse object
+   */
   @RequestMapping("/matches/{userName}")
-  private MatchResponse getMatches(@PathVariable String userName) {
+  private RiotResponse getMatches(@PathVariable String userName) {
     return matchService.getMatches(userName);
   }
 
 
   /*
-    Intention is to LeagueServiceApp to return an object like this
-
 
     SummonerData:
  {
@@ -62,38 +67,53 @@ public class ChampionUsageController {
       }
    ]
 
-
-
    */
   @RequestMapping("/summoner/{userName}")
-  public SummonerData getSummonerData(@PathVariable String userName) {
-    MatchResponse response = this.getMatches(userName);
+  public MatchResponse getSummonerData(@PathVariable String userName) {
+    RiotResponse riotResponse = getMatches(userName);
 
-    SummonerData summonerData = new SummonerData();
+    MatchResponse matchResponse = new MatchResponse();
 
-    List<Date> dateList = new ArrayList<>();
+    List<Match> matches = new ArrayList<>();
+    String dateFormatString;
+    Match match;
+    for (RiotMatch matchRiotResponse : riotResponse.getMatchData()){
+
+      if (isTimestampWithinRange(matchRiotResponse.getDate()))
+      {
+
+        dateFormatString = ZonedDateTime.ofInstant(Instant.ofEpochMilli(matchRiotResponse.getDate()),
+          ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
 
 
-    return summonerData;
+        match = new Match(matchRiotResponse.getChampion(), matchRiotResponse.getRole(), dateFormatString);
+
+        matches.add(match);
+
+      }
+    }
+    matchResponse.setUsername(userName);
+    matchResponse.setMatches(matches);
+    return matchResponse;
   }
 
 
+  /**
+   * Checks if current timestamp is within range of seven days ago starting today.
+   * @param epochSeconds
+   * @return true if the timestamp is within range.
+   */
+  private boolean isTimestampWithinRange(long epochSeconds) {
+    // current match from the loop from list of matches returned from riot
+    Instant instantOfCurrentMatch = Instant.ofEpochMilli(epochSeconds);
+    ZonedDateTime currentMatchDateTime = ZonedDateTime.ofInstant(instantOfCurrentMatch, ZoneOffset.UTC);
 
+    ZonedDateTime sevenDaysAgoDateTime = ZonedDateTime.now(ZoneOffset.UTC).minusDays(6)
+      .withHour(0)
+      .withMinute(0)
+      .withSecond(0)
+      .withNano(0);
 
-
-  public static void main (String[] args) {
-
-    LocalDate date = LocalDate.now().minusDays(7);
-    System.out.println(date);
-
-
-    List<String> myList = new ArrayList<>(Arrays.asList("oKay", "ok", "ok", "hola"));
-
-    Stream<String> stringStream = myList.stream();
-
-    stringStream.forEach(s -> {
-      System.out.println(s);
-    });
-
+    return currentMatchDateTime.isAfter(sevenDaysAgoDateTime);
   }
 }

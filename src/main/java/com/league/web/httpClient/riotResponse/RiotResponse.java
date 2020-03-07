@@ -1,17 +1,18 @@
-package com.league.web.httpClient.model;
-
+package com.league.web.httpClient.riotResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 import java.util.List;
 
-@EqualsAndHashCode
+
+@NoArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
-public class MatchResponse {
+@EqualsAndHashCode
+public class RiotResponse {
   private String username;
-  private List<Match> matches;
+  private List<RiotMatch> matchData;
 }
