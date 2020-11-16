@@ -7,11 +7,11 @@ import lombok.Setter;
 
 import java.util.List;
 
-@NoArgsConstructor
+@EqualsAndHashCode
 @Getter
 @Setter
-@EqualsAndHashCode
+@NoArgsConstructor
 public class MatchResponse {
-  private String summonerName;
+  private String username;
   private List<Match> matches;
 }

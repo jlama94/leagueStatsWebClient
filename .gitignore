@@ -4,6 +4,12 @@ target/
 !**/src/main/**
 !**/src/test/**
 
+# Maven
+.mvn
+.idea
+mvnw
+mvnw.cmd
+
 ### STS ###
 .apt_generated
 .classpath
@@ -14,7 +20,6 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
 *.iws
 *.iml
 *.ipr
