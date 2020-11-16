@@ -6,9 +6,9 @@ import feign.Feign;
 import feign.jackson.JacksonDecoder;
 import org.springframework.stereotype.Component;
 
+// Talks to LeagueStatsService
 @Component
 public class MatchClient {
-
 
   public RiotResponse getMatchesByUserName(String userName) {
     LeagueStatsServiceConnector leagueStatsServiceConnector = Feign.builder()

@@ -11,6 +11,6 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class RiotMatch {
   private Long champion;
-  private Long date;
+  private Long timestamp;
   private String role;
 }

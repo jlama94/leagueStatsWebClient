@@ -9,7 +9,7 @@ public interface LeagueStatsServiceConnector {
   /*
     Endpoint of stats service:
 
-      //http://localhost:8080/matches/pTeemo
+      //http://localhost:8080/matches/PTeemo
 
   */
   @RequestLine("GET /matches/{summonerName}")

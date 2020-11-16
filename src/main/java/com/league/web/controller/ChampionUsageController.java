@@ -33,15 +33,16 @@ public class ChampionUsageController {
   }
 
 
-  /**
-   * Helper method of @getSummonerData retrieve a list of matches.
-   * @param userName
-   * @return riotResponse object
-   */
-  @RequestMapping("/matches/{userName}")
+  @RequestMapping("/matchesLeagueWeb/{userName}")
   private RiotResponse getMatches(@PathVariable String userName) {
     return matchService.getMatches(userName);
   }
+
+
+
+
+
+
 
 
   /*
@@ -58,6 +59,10 @@ public class ChampionUsageController {
    }
 
 
+
+
+
+
    FrontEnd:
 
    chartData = [
@@ -68,7 +73,11 @@ public class ChampionUsageController {
    ]
 
    */
-  @RequestMapping("/summoner/{userName}")
+
+
+
+
+  @RequestMapping("/summonerLeagueWeb/{userName}")
   public MatchResponse getSummonerData(@PathVariable String userName) {
     RiotResponse riotResponse = getMatches(userName);
 
@@ -77,12 +86,14 @@ public class ChampionUsageController {
     List<Match> matches = new ArrayList<>();
     String dateFormatString;
     Match match;
-    for (RiotMatch matchRiotResponse : riotResponse.getMatchData()){
+    for (RiotMatch matchRiotResponse : riotResponse.getMatches()){
+      System.out.println(matchRiotResponse.getChampion() + "\"" +
+        matchRiotResponse.getTimestamp());
 
-      if (isTimestampWithinRange(matchRiotResponse.getDate()))
+      if (isTimestampWithinRange(matchRiotResponse.getTimestamp()))
       {
 
-        dateFormatString = ZonedDateTime.ofInstant(Instant.ofEpochMilli(matchRiotResponse.getDate()),
+        dateFormatString = ZonedDateTime.ofInstant(Instant.ofEpochMilli(matchRiotResponse.getTimestamp()),
           ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
 
 
@@ -98,7 +109,9 @@ public class ChampionUsageController {
   }
 
 
-  /**
+
+
+  /*
    * Checks if current timestamp is within range of seven days ago starting today.
    * @param epochSeconds
    * @return true if the timestamp is within range.

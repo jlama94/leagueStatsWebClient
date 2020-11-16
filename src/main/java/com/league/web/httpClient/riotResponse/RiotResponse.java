@@ -1,4 +1,5 @@
 package com.league.web.httpClient.riotResponse;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @EqualsAndHashCode
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RiotResponse {
   private String username;
-  private List<RiotMatch> matchData;
+  private List<RiotMatch> matches;
 }
