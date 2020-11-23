@@ -26,6 +26,6 @@ export class MatchesService {
 
 
   getSummonerData(): Observable<SummonerData> {
-    return this.httpClient.get<SummonerData>('http://localhost:9090/summoner/pTeemo', httpOptions);
+    return this.httpClient.get<SummonerData>('http://localhost:9090/summonerLeagueWeb/pteemo', httpOptions);
   }
 }
