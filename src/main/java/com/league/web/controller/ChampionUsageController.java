@@ -87,8 +87,6 @@ public class ChampionUsageController {
     String dateFormatString;
     Match match;
     for (RiotMatch matchRiotResponse : riotResponse.getMatches()){
-      System.out.println(matchRiotResponse.getChampion() + "\"" +
-        matchRiotResponse.getTimestamp());
 
       if (isTimestampWithinRange(matchRiotResponse.getTimestamp()))
       {
@@ -113,8 +111,6 @@ public class ChampionUsageController {
 
   /*
    * Checks if current timestamp is within range of seven days ago starting today.
-   * @param epochSeconds
-   * @return true if the timestamp is within range.
    */
   private boolean isTimestampWithinRange(long epochSeconds) {
     // current match from the loop from list of matches returned from riot
