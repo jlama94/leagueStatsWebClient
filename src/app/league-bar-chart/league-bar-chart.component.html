@@ -1,0 +1,15 @@
+<div style="display: block;" *ngIf="isChartReady">
+  <canvas baseChart
+    [datasets]="barChartData"
+    [labels]="barChartLabels"
+    [options]="barChartOptions"
+    [plugins]="barChartPlugins"
+    [legend]="barChartLegend"
+    [chartType]="barChartType">
+  </canvas>
+</div>
+
+
+<div>
+  <button (click)="setDates()">Click for Data</button>
+</div>
