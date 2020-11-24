@@ -32,32 +32,32 @@ export class HomeComponent implements OnInit {
   // https://stackoverflow.com/questions/46909164/data-or-datasets-field-are-required-to-render-char-bar-in-angular-4
 
   ngOnInit() {
-    this.setData('bar');
+    this.setChartType('bar');
+    this.setData();
+  }
+
+
+  private setChartType(chartType) {
+    this.chartType = chartType;
   }
 
 
 
-  setData(bartype: string) {
-    this.chartType = bartype;
-    const garen = {
-      data: [1, 0, 2, 3, 5, 8], label: 'Garen'
-    };
 
-    const teemo = {
-      data: [3, 4, 5, 1, 0, 0], label: 'Teemo'
-    };
-
-    this.matchService.getSummonerData().subscribe(value =>  {
-      this.chartData.push(garen);
-      this.chartData.push(teemo);
-      this.chartLabels = value.timeStap;
-      this.isChartReady = true;
-    }, error1 =>  {
+  setData() {
+    this.matchService.getSummonerMatchData().subscribe((value: SummonerData) => {
+      this.summonerData = new SummonerData(value.summonerName, value.championChartData);
+      this.chartLabels = this.summonerData.championChartData.labels;
+      this.chartData = this.summonerData.championChartData.chartData;
+      this.isChartReady = true; // will render chart when info is available
+    },
+        error1 =>  {
+      console.log('Error');
       this.isChartReady = false;
-      console.log(error1);
-      return;
     });
   }
+
+
 
 
 
