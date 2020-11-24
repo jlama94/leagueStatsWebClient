@@ -1,7 +1,7 @@
-import {Component, OnInit} from '@angular/core';
-import {MatchesService} from '../httpClient/services/matches.service';
+import { Component, OnInit } from '@angular/core';
+import { MatchesService} from '../httpClient/services/matches.service';
+import {Label} from 'ng2-charts';
 import {SummonerData} from '../model/summoner-data';
-import {Match} from '../model/match';
 
 
 @Component({
@@ -11,42 +11,74 @@ import {Match} from '../model/match';
 })
 
 
-// https://stackoverflow.com/questions/46909164/data-or-datasets-field-are-required-to-render-char-bar-in-angular-4
+
+
 export class HomeComponent implements OnInit {
 
   // variables
+   chartType;
 
-  userName: string;
+   chartData = []; // ChartDataSet[]
 
-  isChartReady = false;
+   chartLabels = []; // The X-axis values, Label[]
 
-  champions: [Match];
+   isChartReady = false;
 
-  summonerData: SummonerData; // object holding values from backend
-
-
-
-  constructor (private matchService: MatchesService) {}
+   summonerData: SummonerData; // object holding values from backend
 
 
-  ngOnInit () {
-    // this.setData('bar');
+  constructor(private matchService: MatchesService) {}
+
+  // https://stackoverflow.com/questions/46909164/data-or-datasets-field-are-required-to-render-char-bar-in-angular-4
+
+  ngOnInit() {
+    this.setData('bar');
   }
 
 
-  setData (bartype: string) {
-    this.matchService.getSummonerData().subscribe(response => {
-      // console.log(response);
-      this.summonerData = response;
 
-      this.champions = this.summonerData.matches;
+  setData(bartype: string) {
+    this.chartType = bartype;
+    const garen = {
+      data: [1, 0, 2, 3, 5, 8], label: 'Garen'
+    };
 
+    const teemo = {
+      data: [3, 4, 5, 1, 0, 0], label: 'Teemo'
+    };
 
-      console.log(this.champions);
-
-    }, error => {
-      console.log('Could not get data from service.');
+    this.matchService.getSummonerData().subscribe(value =>  {
+      this.chartData.push(garen);
+      this.chartData.push(teemo);
+      this.chartLabels = value.timeStap;
+      this.isChartReady = true;
+    }, error1 =>  {
+      this.isChartReady = false;
+      console.log(error1);
+      return;
     });
-
   }
+
+
+
+
+
+  /**
+   * Here there could be a function that returns an array, and we just push it to the chartData array.
+   */
+  enterNewChampion() {
+    const data = {
+      data: [10, 2, 8, 0, 0, 2, 1], label: 'Warwick'
+    };
+    this.chartData.push(data);
+  }
+
+  /**
+   * Just push a new label/date to the labels array.
+   */
+  enterNewDate() {
+    const date: Label = '01-08-2020';
+    this.chartLabels.push(date);
+  }
+
 }

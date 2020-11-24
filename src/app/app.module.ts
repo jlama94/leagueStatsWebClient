@@ -7,14 +7,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { MatchesService } from './httpClient/services/matches.service';
-import { LeagueBarChartComponent } from './league-bar-chart/league-bar-chart.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
-    LeagueBarChartComponent
+    HomeComponent
   ],
   imports: [
     BrowserModule,
