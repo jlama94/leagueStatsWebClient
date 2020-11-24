@@ -1,26 +1,18 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HttpClientModule} from '@angular/common/http';
-import { HighchartsChartModule} from 'highcharts-angular';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { HomeComponent } from './home/home.component';
-import { MatchesService } from './httpClient/services/matches.service';
-
 
 @NgModule({
   declarations: [
-    AppComponent,
-    HomeComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    HighchartsChartModule
+    AppRoutingModule
   ],
-  providers: [MatchesService],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
