@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-
-import {SummonerData} from '../../model/summoner-data';
-import {Observable} from 'rxjs';
+import {MatchResponse} from '../../model/match-response';
 
 
 const httpOptions = {
@@ -17,10 +15,10 @@ const httpOptions = {
 
 export class MatchesService {
 
+  constructor(private httpClient: HttpClient) { }
 
-  constructor(private httpClient: HttpClient) {}
-
-  getSummonerMatchData(): Observable <SummonerData> {
-    return this.httpClient.get<SummonerData>('http://localhost:9090/summonerData/pTeemo', httpOptions);
+  getMatches() {
+    // return this.httpClient.get('http://localhost:9090/matches/pTeemo', httpOptions);
+    return this.httpClient.get<MatchResponse>('http://localhost:9090/matches/pTeemo', httpOptions);
   }
 }

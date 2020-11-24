@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule} from '@angular/common/http';
-import { ChartsModule} from 'ng2-charts';
+import { HighchartsChartModule} from 'highcharts-angular';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -18,7 +18,7 @@ import { MatchesService } from './httpClient/services/matches.service';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    ChartsModule
+    HighchartsChartModule
   ],
   providers: [MatchesService],
   bootstrap: [AppComponent]
