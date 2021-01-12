@@ -25,6 +25,6 @@ A match coming from localhost:8080/matches/pteemo
 @EqualsAndHashCode
 public class Match {
   private Long champion;
+  private String timestamp;
   private String role;
-  private String lane;
 }
