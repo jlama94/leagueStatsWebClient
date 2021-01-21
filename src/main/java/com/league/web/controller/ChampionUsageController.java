@@ -1,9 +1,9 @@
 package com.league.web.controller;
 
-import com.league.web.httpClient.model.MiniMatch;
-import com.league.web.httpClient.model.MiniRiotResponse;
-import com.league.web.httpClient.riotResponse.RiotMatch;
+import com.league.web.httpClient.model.*;
 import com.league.web.httpClient.riotResponse.RiotResponse;
+import com.league.web.httpClient.ui.MatchUI;
+import com.league.web.httpClient.ui.MatchUIResponse;
 import com.league.web.service.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+// todo: Pass the data to the frontend
 
 
 // https://howtodoinjava.com/spring5/webmvc/spring-mvc-cors-configuration/
@@ -23,6 +24,7 @@ import java.util.*;
 public class ChampionUsageController {
 
   private MatchService matchService;
+
 
   @Autowired
   public ChampionUsageController(MatchService matchService) {
@@ -35,107 +37,188 @@ public class ChampionUsageController {
     return matchService.getMatches(userName);
   }
 
-  /**
-   * 7 most recent matches
-   */
-  private List<RiotMatch> getSevenMatches(RiotResponse riotResponse) {
-    List<RiotMatch> riotMatchList = new ArrayList<>();
-    for (int i = 0; i < riotResponse.getMatches().size(); i++) {
-      RiotMatch currentMatch = riotResponse.getMatches().get(i);
-      // unique matches
-      if (!riotMatchList.contains(currentMatch)) {
-        riotMatchList.add(currentMatch);
-      }
-    }
-    // leave 7
-    for (int i = riotMatchList.size() - 1; i >= 7; i--) {
-      riotMatchList.remove(riotMatchList.get(i));
-    }
-    return riotMatchList;
-  }
 
-  /**
-   * return a list of strings/dates 7
+  /*
+      Returns the 7 recent dates of that user
    */
-  private List<String> getSevenDates(RiotResponse riotResponse) {
+  @RequestMapping("/recentDates/{userName}")
+  public String[] getSevenDates(@PathVariable String userName) {
         /*
         1) Get a list of dates (7 dates) for the graph. For the "ChartLabels"
      */
-    List<String> datesList = new ArrayList<>();
-    String dateFormatStr;
-
-    for (RiotMatch riotMatch : riotResponse.getMatches()) {
-      dateFormatStr = ZonedDateTime.ofInstant(Instant.ofEpochMilli(riotMatch.getTimestamp()),
-        ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyy-MM-dd"));
-
-      if (!datesList.contains(dateFormatStr)) {
-        datesList.add(dateFormatStr);
-      }
-    }
-
-    //  7 most recent dates
-    for (int i = datesList.size() - 1; i >= 7; i--) {
-      datesList.remove(datesList.get(i));
-    }
-
-    return datesList;
-  }
-
-
-
-
-/*
-        - An array of strings representing the dates (7 dates).
-        - Array storing in each slot the number of times champion played per day.
-
-        Map <String, String[]>
-            -----> { "champId", [12, 3, 4, 5] }
- */
-
-  @RequestMapping("/summonerLeagueWeb/{userName}")
-  public Map<LocalDate, Map<Long, List<MiniMatch>>> getSummonerData(@PathVariable String userName) {
-
     RiotResponse riotResponse = getMatches(userName);
     MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
 
-    Map<LocalDate, Map<Long, List<MiniMatch>>> outerMap = new LinkedHashMap<>();
+    List<MiniMatch> miniMatchList = miniRiotResponse.getRecentMatches();
 
-    for (int i = 0; i < miniRiotResponse.getAllMatches().size(); i++) {
 
+    List<String> datesList = new ArrayList<>();
+    for (MiniMatch miniMatch : miniMatchList) {
+      if (!datesList.contains(miniMatch.getTimestamp().toString())) {
+        datesList.add(miniMatch.getTimestamp().toString());
+      }
+    }
+
+    String[] result = new String[datesList.size()];
+    for (int i = 0; i < result.length; i++) {
+      result[i] = datesList.get(i);
+    }
+
+    return result;
+  }
+
+
+  /*
+  Map the data map so that can match what the front end wants.
+
+      - An array of strings representing the dates (7 dates).
+      - Array storing in each slot the number of times champion played per day.
+
+      Map <String, Long[]>
+          -----> { "champId", [12, 3, 4, 5] }
+ */
+  @RequestMapping("/summonerLeagueWebV2/{userName}")
+  //  Map<String, List<Integer>>
+  //TreeMap<LocalDate, Map<Long, List<MiniMatch>>>
+  private MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
+    RiotResponse riotResponse = getMatches(userName);
+    MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
+
+    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> outerMap = new TreeMap<>();
+
+
+    for (MiniMatch currentMatch : miniRiotResponse.getRecentMatches()) {
       Map<Long, List<MiniMatch>> innerMap = new LinkedHashMap<>();
       List<MiniMatch> valueList = new ArrayList<>();
 
-      MiniMatch miniMatch = miniRiotResponse.getAllMatches().get(i);
-
       /*
-          If map doesnt have an entry
+        If map doesnt have entry
        */
-      if (!outerMap.containsKey(miniMatch.getTimestamp())) {
-        valueList.add(miniMatch); // add the current match to the List value
-        innerMap.put(miniMatch.getChampionId(), valueList); // place the key and value to the inner map
-        outerMap.put(miniMatch.getTimestamp(), innerMap); // put the current timestamp as the outer key and the inner map as val
-      }
-      /*
-          Match with same date as OuterMap but different champID.
-       */
-      if (outerMap.containsKey(miniMatch.getTimestamp()) && !innerMap.containsKey(miniMatch.getChampionId())) {
-        // quiero crear otra entry en el innerMap
-        valueList.add(miniMatch);
-        innerMap.put(miniMatch.getChampionId(), valueList);
-
-        outerMap.get(miniMatch.getTimestamp()).put(miniMatch.getChampionId(), valueList);
-      }
-      /*
-          Same champID that has already been added to the innerMap entry
-       */
-      else {
-        innerMap.get(miniMatch.getChampionId()).add(miniMatch);
+      if (!outerMap.containsKey(currentMatch.getTimestamp())) {
+        valueList.add(currentMatch);
+        innerMap.put(currentMatch.getChampionId(), valueList);
+        outerMap.put(currentMatch.getTimestamp(), innerMap);
       }
 
+      /*
+        Match with same date as outerMap but different champId
+       */
+
+      if (outerMap.containsKey(currentMatch.getTimestamp()) && !innerMap.containsKey(currentMatch.getChampionId())) {
+        valueList.add(currentMatch);
+        innerMap.put(currentMatch.getChampionId(), valueList);
+        outerMap.get(currentMatch.getTimestamp()).put(currentMatch.getChampionId(), valueList);
+      } else {
+        innerMap.get(currentMatch.getChampionId()).add(currentMatch);
+      }
     }
-    return outerMap;
 
+    Map<String, List<Integer>> championData = new LinkedHashMap<>();
+    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> outerMapEntry : outerMap.entrySet()) {
+      for (Map.Entry<Long, List<MiniMatch>> innerMapEntry : outerMapEntry.getValue().entrySet()) {
+
+        String currentChampionId = String.valueOf(innerMapEntry.getKey());
+        List<MiniMatch> matchList = innerMapEntry.getValue();
+
+        List<Integer> amount_of_times_played = new ArrayList<>();
+
+        if (!championData.containsKey(currentChampionId)) {
+          amount_of_times_played.add(matchList.size());
+          championData.put(currentChampionId, amount_of_times_played);
+        } else if (championData.containsKey(currentChampionId)) {
+          List<Integer> currentList = championData.get(currentChampionId);
+          currentList.add(matchList.size());
+          championData.put(currentChampionId, currentList);
+        }
+      }
+    }
+
+    MatchUIResponse matchUIResponse = new MatchUIResponse();
+    List<MatchUI> temp_match_UI_list = new ArrayList<>();
+    MatchUI matchUI;
+    Integer[] data;
+    for (Map.Entry<String, List<Integer>> entry : championData.entrySet()) {
+      matchUI = new MatchUI();
+      matchUI.setLabel(entry.getKey());
+
+      data = new Integer[entry.getValue().size()];
+
+      matchUI.setData(entry.getValue().toArray(data));
+
+
+      if (!temp_match_UI_list.contains(matchUI)) {
+        temp_match_UI_list.add(matchUI);
+      }
+    }
+
+    MatchUI[] array_of_matchesUI = new MatchUI[temp_match_UI_list.size()];
+
+    array_of_matchesUI = temp_match_UI_list.toArray(array_of_matchesUI);
+
+    matchUIResponse.setResponse(array_of_matchesUI);
+
+    return matchUIResponse;
   }
+
+
+////////////////////////// older version ////////////////////////// ////////////////////////// //////////////////////////
+  /*
+    Map the data map so that can match what the front end wants.
+
+        - An array of strings representing the dates (7 dates).
+        - Array storing in each slot the number of times champion played per day.
+
+        Map <String, Long[]>
+            -----> { "champId", [12, 3, 4, 5] }
+   */
+//  @RequestMapping("/summonerLeagueWeb/{userName}")
+//  // Map<LocalDate, Map<Long, List<MiniMatch>>>
+//  private Map<LocalDate,Map<Long, List<MiniMatch>>> getSummonerData(@PathVariable String userName) {
+//
+//    RiotResponse riotResponse = getMatches(userName);
+//    MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
+//
+//    Map<LocalDate, Map<Long, List<MiniMatch>>> outerMap = new LinkedHashMap<>();
+//
+//    for (int i = 0; i < miniRiotResponse.getAllMatches().size(); i++)
+//    {
+//
+//      Map<Long, List<MiniMatch>> innerMap = new LinkedHashMap<>();
+//      List<MiniMatch> valueList = new ArrayList<>();
+//
+//      MiniMatch miniMatch = miniRiotResponse.getAllMatches().get(i);
+//
+//      /*
+//          If map doesnt have an entry
+//       */
+//      if (!outerMap.containsKey(miniMatch.getTimestamp())) {
+//        valueList.add(miniMatch); // add the current match to the List value
+//        innerMap.put(miniMatch.getChampionId(), valueList); // place the key and value to the inner map
+//        outerMap.put(miniMatch.getTimestamp(), innerMap); // put the current timestamp as the outer key and the inner map as val
+//      }
+//
+//      /*
+//          Match with same date as OuterMap but different champID.
+//       */
+//      if (outerMap.containsKey(miniMatch.getTimestamp()) && !innerMap.containsKey(miniMatch.getChampionId())) {
+//        // quiero crear otra entry en el innerMap
+//        valueList.add(miniMatch);
+//        innerMap.put(miniMatch.getChampionId(), valueList);
+//
+//        outerMap.get(miniMatch.getTimestamp()).put(miniMatch.getChampionId(), valueList);
+//      }
+//
+//      /*
+//          Same champID that has already been added to the innerMap entry
+//       */
+//      else {
+//        innerMap.get(miniMatch.getChampionId()).add(miniMatch);
+//      }
+//    }
+//    return outerMap;
+//  }
+
+////////////////////////// OLDER VERSION ////////////////////////// ////////////////////////// //////////////////////////
 
 
   /*

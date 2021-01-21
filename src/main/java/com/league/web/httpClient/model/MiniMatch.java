@@ -12,5 +12,6 @@ import java.time.LocalDate;
 @EqualsAndHashCode
 public class MiniMatch {
   private LocalDate timestamp;
+//  private Long timestamp;
   private Long championId;
 }
