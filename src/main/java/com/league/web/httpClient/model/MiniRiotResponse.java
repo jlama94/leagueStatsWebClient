@@ -7,10 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,24 +24,18 @@ public class MiniRiotResponse {
   public MiniRiotResponse(RiotResponse riotResponse) {
     this.riotResponse = riotResponse;
     miniMatches = new ArrayList<>();
+
     MiniMatch miniMatch;
 
-    for (int i = 0; i < riotResponse.getMatches().size(); i++) {
-
-      RiotMatch riotMatch = riotResponse.getMatches().get(i);
-
+    for (RiotMatch match : riotResponse.getMatches()) {
       miniMatch = new MiniMatch();
-      miniMatch.setChampionId(riotMatch.getChampion());
+      miniMatch.setChampionId(match.getChampion());
 
-      LocalDateTime tmpDate = LocalDateTime
-        .ofInstant(Instant.ofEpochMilli(riotMatch.getTimestamp()), ZoneOffset.UTC);
-
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("America/Chicago"));
 
       LocalDate date = tmpDate.toLocalDate();
 
-
       miniMatch.setTimestamp(date);
-
 
       miniMatches.add(miniMatch);
     }
@@ -56,9 +47,16 @@ public class MiniRiotResponse {
 
   // seven recent matches
   public List<MiniMatch> getRecentMatches() {
-    for (int i = miniMatches.size() - 1; i >= 7; i--) {
-      miniMatches.remove(miniMatches.get(i));
+    List<MiniMatch> result = new ArrayList<>();
+
+    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
+    LocalDate sevenDaysBeforeNow = now.minusDays(7);
+
+    for (MiniMatch miniMatch : miniMatches) {
+      if (miniMatch.getTimestamp().isAfter(sevenDaysBeforeNow)) {
+          result.add(miniMatch);
+        }
     }
-    return miniMatches;
+    return result;
   }
 }
