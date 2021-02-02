@@ -114,8 +114,6 @@ public class ChampionUsageController {
 
   */
   @RequestMapping("/summonerLeagueWebV2/{userName}")
-  //  Map<String, List<Integer>>
-  //TreeMap<LocalDate, Map<Long, List<MiniMatch>>>
   private MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
     RiotResponse riotResponse = getMatches(userName);
     MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
@@ -191,6 +189,22 @@ public class ChampionUsageController {
     List<MatchUI> temp_match_UI_list = new ArrayList<>();
     MatchUI matchUI;
     Integer[] data;
+
+    List<String> dateLabels = new ArrayList<>();
+    // set Data labels
+    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
+      dateLabels.add(localDateMapEntry.getKey().toString());
+    }
+
+
+
+    String[] labelsArray = new String[dateLabels.size()];
+    dateLabels.toArray(labelsArray);
+
+    matchUIResponse.setDateLabels(labelsArray);
+
+
+
     for (Map.Entry<String, List<Integer>> entry : championData.entrySet()) {
       matchUI = new MatchUI();
       matchUI.setLabel(entry.getKey());
@@ -306,22 +320,4 @@ public class ChampionUsageController {
 
     return championsIDs;
   }
-
-
-//  /*
-//   * Checks if current timestamp is within range of seven days ago starting today.
-//   */
-//  private boolean isTimestampWithinRange(long epochSeconds) {
-//    // current match from the loop from list of matches returned from riot
-//    Instant instantOfCurrentMatch = Instant.ofEpochMilli(epochSeconds);
-//    ZonedDateTime currentMatchDateTime = ZonedDateTime.ofInstant(instantOfCurrentMatch, ZoneOffset.UTC);
-//
-//    ZonedDateTime sevenDaysAgoDateTime = ZonedDateTime.now(ZoneOffset.UTC).minusDays(6)
-//      .withHour(0)
-//      .withMinute(0)
-//      .withSecond(0)
-//      .withNano(0);
-//
-//    return currentMatchDateTime.isAfter(sevenDaysAgoDateTime);
-//  }
 }
