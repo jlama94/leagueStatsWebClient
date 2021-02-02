@@ -31,7 +31,7 @@ public class MiniRiotResponse {
       miniMatch = new MiniMatch();
       miniMatch.setChampionId(match.getChampion());
 
-      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneOffset.UTC);
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("America/Chicago"));
 
       LocalDate date = tmpDate.toLocalDate();
 
@@ -49,7 +49,7 @@ public class MiniRiotResponse {
   public List<MiniMatch> getRecentMatches() {
     List<MiniMatch> result = new ArrayList<>();
 
-    LocalDate now = LocalDate.now(ZoneOffset.UTC);
+    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
     LocalDate sevenDaysBeforeNow = now.minusDays(7);
 
     for (MiniMatch miniMatch : miniMatches) {
