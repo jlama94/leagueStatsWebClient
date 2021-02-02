@@ -12,4 +12,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MatchUIResponse {
   private MatchUI[] response;
+  private String[] dateLabels;
 }
