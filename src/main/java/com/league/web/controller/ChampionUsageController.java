@@ -1,10 +1,12 @@
 package com.league.web.controller;
 
 import com.league.web.httpClient.model.*;
+import com.league.web.httpClient.riotResponse.RiotMatch;
 import com.league.web.httpClient.riotResponse.RiotResponse;
 import com.league.web.httpClient.ui.MatchUI;
 import com.league.web.httpClient.ui.MatchUIResponse;
 import com.league.web.service.MatchService;
+import com.league.web.viewMapper.ChampionUsageViewMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,59 +49,6 @@ public class ChampionUsageController {
     return localDateList;
   }
 
-
-  /*
-      Returns the 7 recent dates of that user
-   */
-  @RequestMapping("/recentDates/{userName}")
-  public String[] getSevenDates(@PathVariable String userName) {
-        /*
-        1) Get a list of dates (7 dates) for the graph. For the "ChartLabels"
-     */
-    RiotResponse riotResponse = getMatches(userName);
-    MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
-
-    List<MiniMatch> miniMatchList = miniRiotResponse.getRecentMatches();
-
-    // We get the current dates available from the list of matches
-    List<LocalDate> datesList = new ArrayList<>();
-    for (MiniMatch miniMatch : miniMatchList) {
-      if (!datesList.contains(miniMatch.getTimestamp())) {
-        datesList.add(miniMatch.getTimestamp());
-      }
-    }
-
-    /*
-        1) we get a list of
-        2021-01-22
-        2021-01-23
-        2021-01-24
-        2021-01-25
-        2021-01-26
-        2021-01-27
-        2021-01-28
-     */
-    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-    LocalDate sevenDaysBeforeNow = now.minusDays(6);
-    LocalDate sevenDaysFromNow = sevenDaysBeforeNow.plusDays(7);
-
-    List<LocalDate> localDateList = sevenDaysBeforeNow.datesUntil(sevenDaysFromNow).collect(Collectors.toList());
-    for (LocalDate date : localDateList) {
-      if (!datesList.contains(date)) {
-        datesList.add(date);
-      }
-    }
-    // At this point the list has LocalDates but they aren't sorted
-    Collections.sort(datesList);
-
-    String[] dates = new String[datesList.size()];
-    for (int i = 0; i < dates.length; i++) {
-      dates[i] = datesList.get(i).toString();
-    }
-
-    return dates;
-  }
-
   /*
       - An array of strings representing the dates (7 dates).
       - Array storing in each slot the number of times champion played per day.
@@ -116,15 +65,56 @@ public class ChampionUsageController {
   @RequestMapping("/summonerLeagueWebV2/{userName}")
   private MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
     RiotResponse riotResponse = getMatches(userName);
-    MiniRiotResponse miniRiotResponse = new MiniRiotResponse(riotResponse);
 
-    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = getChampionMatchesByDatePlayed(miniRiotResponse);
 
-    Set<Long> allUniqueChampionsIDs = getAllUniqueChampionsIDs(miniRiotResponse);
+    //////////////////////////// MiniRiotResponse constructor code
+
+    List<MiniMatch> miniMatchList = new ArrayList<>();
+    MiniMatch miniMatch;
+    List<RiotMatch> riotResponseMatches = riotResponse.getMatches();
+
+    //Convert timestamps to dates
+    for (RiotMatch match : riotResponseMatches) {
+      miniMatch = new MiniMatch();
+      miniMatch.setChampionId(match.getChampion());
+
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("America/Chicago"));
+
+      LocalDate date = tmpDate.toLocalDate();
+
+      miniMatch.setTimestamp(date);
+
+      miniMatchList.add(miniMatch);
+    }
+
+
+    //Filtering Down to 7 Days
+    // .getRecentMatches()
+    List<MiniMatch> recentMatches = new ArrayList<>();
+    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
+    LocalDate sevenDaysBeforeNow = now.minusDays(7);
+
+    for (MiniMatch match : miniMatchList) {
+      if (match.getTimestamp().isAfter(sevenDaysBeforeNow)) {
+        recentMatches.add(match);
+      }
+    }
+
+    //Everything above this could be service level code
+
+
+    //////////////////////////// MiniRiotResponse constructor code
+
+    //Building a map of games played by champion by date
+    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = getChampionMatchesByDatePlayed(recentMatches);
+
+    //Unique champion ids
+    Set<Long> allUniqueChampionsIDs = getAllUniqueChampionsIDs(recentMatches);
 
     Map<String, List<Integer>> championData = new LinkedHashMap<>();
 
 
+    //building map of games played by champion for the seven days including 0s
     for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayedEntry : championMatchesByDatePlayed.entrySet()) {
 
       Map<Long, List<MiniMatch>> matchesPlayedByChampionId = championMatchesByDatePlayedEntry.getValue();
@@ -184,54 +174,14 @@ public class ChampionUsageController {
     }
 
 
-    MatchUIResponse matchUIResponse = new MatchUIResponse();
-
-    List<MatchUI> temp_match_UI_list = new ArrayList<>();
-    MatchUI matchUI;
-    Integer[] data;
-
-    List<String> dateLabels = new ArrayList<>();
-    // set Data labels
-    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
-      dateLabels.add(localDateMapEntry.getKey().toString());
-    }
-
-
-
-    String[] labelsArray = new String[dateLabels.size()];
-    dateLabels.toArray(labelsArray);
-
-    matchUIResponse.setDateLabels(labelsArray);
-
-
-
-    for (Map.Entry<String, List<Integer>> entry : championData.entrySet()) {
-      matchUI = new MatchUI();
-      matchUI.setLabel(entry.getKey());
-
-      data = new Integer[entry.getValue().size()];
-
-      matchUI.setData(entry.getValue().toArray(data));
-
-
-      if (!temp_match_UI_list.contains(matchUI)) {
-        temp_match_UI_list.add(matchUI);
-      }
-    }
-
-    MatchUI[] array_of_matchesUI = new MatchUI[temp_match_UI_list.size()];
-
-    array_of_matchesUI = temp_match_UI_list.toArray(array_of_matchesUI);
-
-    matchUIResponse.setResponse(array_of_matchesUI);
-
-    return matchUIResponse;
+    // Building UI object
+    ChampionUsageViewMapper championUsageViewMapper = new ChampionUsageViewMapper();
+    return championUsageViewMapper.buildMatchUIResponse(championMatchesByDatePlayed, championData);
   }
 
-  private TreeMap<LocalDate, Map<Long, List<MiniMatch>>> getChampionMatchesByDatePlayed(MiniRiotResponse miniRiotResponse) {
-    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = new TreeMap<>();
 
-    List<MiniMatch> recentMatches = miniRiotResponse.getRecentMatches();
+  private TreeMap<LocalDate, Map<Long, List<MiniMatch>>> getChampionMatchesByDatePlayed(List<MiniMatch> recentMatches) {
+    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = new TreeMap<>();
 
     for (MiniMatch currentMatch : recentMatches) {
 
@@ -310,11 +260,11 @@ public class ChampionUsageController {
   }
 
 
-  private Set<Long> getAllUniqueChampionsIDs(MiniRiotResponse riotResponse) {
+  private Set<Long> getAllUniqueChampionsIDs(List<MiniMatch> recentMatches) {
 
     Set<Long> championsIDs = new HashSet<>();
 
-    for (MiniMatch recentMatch : riotResponse.getRecentMatches()) {
+    for (MiniMatch recentMatch : recentMatches) {
       championsIDs.add(recentMatch.getChampionId());
     }
 
