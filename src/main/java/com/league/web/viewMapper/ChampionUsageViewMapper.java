@@ -21,13 +21,11 @@ public class ChampionUsageViewMapper {
   }
 
 
-  public MatchUIResponse buildMatchUIResponse(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed,
-                                              String userName) {
+  public MatchUIResponse buildMatchUIResponse(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
 
-    List<MiniMatch> recentMatches = this.matchService.getRecentMatches(userName);
 
-    //Unique champion ids
-    Set<Long> allUniqueChampionsIDs = getAllUniqueChampionsIDs(recentMatches);
+    Set<Long> allUniqueChampionsIDs = getUniqueChampionIds(championMatchesByDatePlayed);
+
 
     Map<String, List<Integer>> championData = new LinkedHashMap<>();
 
@@ -135,14 +133,24 @@ public class ChampionUsageViewMapper {
     return matchUIResponse;
   }
 
-  private Set<Long> getAllUniqueChampionsIDs(List<MiniMatch> recentMatches) {
+  private Set<Long> getUniqueChampionIds(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
+    // recent matches from championMatchesByDatePlayed:
+    List<MiniMatch> recentMatches = new ArrayList<>();
+    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet())
+    {
 
-    Set<Long> championsIDs = new HashSet<>();
+      Map<Long, List<MiniMatch>> entryValue = localDateMapEntry.getValue();
 
-    for (MiniMatch recentMatch : recentMatches) {
-      championsIDs.add(recentMatch.getChampionId());
+      for (Map.Entry<Long, List<MiniMatch>> longListMapEntry : entryValue.entrySet()) {
+        recentMatches.addAll(longListMapEntry.getValue());
+      }
     }
 
-    return championsIDs;
+    //Unique champion ids
+    Set<Long> allUniqueChampionsIDs = new HashSet<>();
+    for (MiniMatch recentMatch : recentMatches) {
+      allUniqueChampionsIDs.add(recentMatch.getChampionId());
+    }
+    return allUniqueChampionsIDs;
   }
 }
