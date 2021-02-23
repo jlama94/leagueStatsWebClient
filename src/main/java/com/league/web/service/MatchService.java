@@ -19,18 +19,21 @@ public class MatchService {
 
   private MatchClient matchClient;
 
+
   @Autowired
   public MatchService(MatchClient matchClient) {
     this.matchClient = matchClient;
   }
 
 
-  public RiotResponse getMatches(String userName) {
-    return this.matchClient.getMatchesByUserName(userName);
-  }
+  // this is not being used atm
+//  public RiotResponse getMatches(String userName) {
+//    return this.matchClient.getMatchesByUserName(userName);
+//  }
 
-  public List<MiniMatch> getRecentMatches(String userName) {
-    RiotResponse riotResponse = this.matchClient.getMatchesByUserName(userName);
+  public List<MiniMatch> getRecentMatches(String userName, LocalDate startDate, LocalDate endDate) {
+    RiotResponse riotResponse = this.matchClient.getMatchesByUserName(userName,
+      startDate, endDate);
 
     List<MiniMatch> miniMatchList = new ArrayList<>();
     MiniMatch miniMatch;
@@ -41,7 +44,7 @@ public class MatchService {
       miniMatch = new MiniMatch();
       miniMatch.setChampionId(match.getChampion());
 
-      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("America/Chicago"));
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("UTC"));
 
       LocalDate date = tmpDate.toLocalDate();
 
@@ -51,24 +54,36 @@ public class MatchService {
     }
 
 
-//    Filtering Down to 7 Days
+//    Filtering Down to 7 Days, but the service client is already doing it? so no filtering?
     List<MiniMatch> recentMatches = new ArrayList<>();
-    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-    LocalDate sevenDaysBeforeNow = now.minusDays(7);
 
-    for (MiniMatch match : miniMatchList) {
-      if (match.getTimestamp().isAfter(sevenDaysBeforeNow)) {
-        recentMatches.add(match);
-      }
-    }
+//    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
+//    LocalDate sevenDaysBeforeNow = now.minusDays(7);
+//
+//    for (MiniMatch match : miniMatchList) {
+//      if (match.getTimestamp().isAfter(sevenDaysBeforeNow)) {
+//        recentMatches.add(match);
+//      }
+//    }
 
+    recentMatches.addAll(miniMatchList);
+
+    // 77 matches for a week -> 7 days?
     return recentMatches;
   }
 
 
 
-  public TreeMap<LocalDate, Map<Long, List<MiniMatch>>> getMatchesForGraph(String userName) {
-    RiotResponse riotResponse = matchClient.getMatchesByUserName(userName);
+  /*
+      Hardcoded dates from: "ChampionUsageController"
+        endDate -> LocalDate today = LocalDate.now();
+    startDate -> LocalDate sevenDaysAgoFromToday = today.minusDays(7);
+   */
+  public TreeMap<LocalDate, Map<Long, List<MiniMatch>>> getMatchesForGraph(String userName,
+                                                                           LocalDate startDate,
+                                                                           LocalDate endDate) {
+
+    RiotResponse riotResponse = matchClient.getMatchesByUserName(userName, startDate, endDate);
 
 
     List<MiniMatch> miniMatchList = new ArrayList<>();
@@ -81,7 +96,7 @@ public class MatchService {
       miniMatch = new MiniMatch();
       miniMatch.setChampionId(match.getChampion());
 
-      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("America/Chicago"));
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("UTC"));
 
       LocalDate date = tmpDate.toLocalDate();
 
@@ -91,22 +106,10 @@ public class MatchService {
     }
 
 
-    //Filtering Down to 7 Days
-    // .getRecentMatches()
-    List<MiniMatch> recentMatches = new ArrayList<>();
-    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-    LocalDate sevenDaysBeforeNow = now.minusDays(7);
-
-    for (MiniMatch match : miniMatchList) {
-      if (match.getTimestamp().isAfter(sevenDaysBeforeNow)) {
-        recentMatches.add(match);
-      }
-    }
-
 
     TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = new TreeMap<>();
 
-    for (MiniMatch currentMatch : recentMatches) {
+    for (MiniMatch currentMatch : miniMatchList) {
 
 
       /*
@@ -164,17 +167,10 @@ public class MatchService {
 
         }
       }
-
     }
 
-
-    LocalDate now1 = LocalDate.now(ZoneId.of("America/Chicago"));
-    LocalDate sevenDaysBeforeNow1 = now1.minusDays(6);
-    LocalDate sevenDaysFromNow1 = sevenDaysBeforeNow1.plusDays(7);
-
-    List<LocalDate> localDateList = sevenDaysBeforeNow1.datesUntil(sevenDaysFromNow1).collect(Collectors.toList());
-
-    Collections.sort(localDateList);
+    LocalDate endThreshold = endDate.plusDays(1);
+    List<LocalDate> localDateList = startDate.datesUntil(endThreshold).sorted().collect(Collectors.toList());
 
 
 

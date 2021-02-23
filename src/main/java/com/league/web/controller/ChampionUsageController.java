@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 // https://howtodoinjava.com/spring5/webmvc/spring-mvc-cors-configuration/
@@ -32,16 +31,17 @@ public class ChampionUsageController {
   }
 
 
-  private List<LocalDate> getRecentSevenDates() {
-    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-    LocalDate sevenDaysBeforeNow = now.minusDays(6);
-    LocalDate sevenDaysFromNow = sevenDaysBeforeNow.plusDays(7);
-
-    List<LocalDate> localDateList = sevenDaysBeforeNow.datesUntil(sevenDaysFromNow).collect(Collectors.toList());
-
-    Collections.sort(localDateList);
-    return localDateList;
-  }
+  // this is not being used anywhere atm
+//  private List<LocalDate> getRecentSevenDates() {
+//    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
+//    LocalDate sevenDaysBeforeNow = now.minusDays(6);
+//    LocalDate sevenDaysFromNow = sevenDaysBeforeNow.plusDays(7);
+//
+//    List<LocalDate> localDateList = sevenDaysBeforeNow.datesUntil(sevenDaysFromNow).collect(Collectors.toList());
+//
+//    Collections.sort(localDateList);
+//    return localDateList;
+//  }
 
   /*
       - An array of strings representing the dates (7 dates).
@@ -53,8 +53,13 @@ public class ChampionUsageController {
   @RequestMapping("/summonerLeagueWebV2/{userName}")
   private MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
 
-    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = matchService.getMatchesForGraph(userName);
 
-    return championUsageViewMapper.buildMatchUIResponse(championMatchesByDatePlayed, userName);
+    LocalDate today = LocalDate.now().minusDays(1);
+    LocalDate sevenDaysAgoFromToday = today.minusDays(6);
+
+    TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = matchService.getMatchesForGraph(userName,
+      sevenDaysAgoFromToday, today);
+
+    return championUsageViewMapper.buildMatchUIResponse(championMatchesByDatePlayed, userName, sevenDaysAgoFromToday, today);
   }
 }
