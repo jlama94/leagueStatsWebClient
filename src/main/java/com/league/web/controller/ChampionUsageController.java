@@ -60,6 +60,6 @@ public class ChampionUsageController {
     TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = matchService.getMatchesForGraph(userName,
       sevenDaysAgoFromToday, today);
 
-    return championUsageViewMapper.buildMatchUIResponse(championMatchesByDatePlayed, userName, sevenDaysAgoFromToday, today);
+    return championUsageViewMapper.buildMatchUIResponse(championMatchesByDatePlayed);
   }
 }
