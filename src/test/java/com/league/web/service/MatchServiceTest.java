@@ -1,22 +1,12 @@
 package com.league.web.service;
 
 import com.league.web.client.MatchClient;
-import com.league.web.httpClient.riotResponse.RiotMatch;
-import com.league.web.httpClient.riotResponse.RiotResponse;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 
-
-import java.util.Arrays;
-import java.util.List;
-
-
-class RiotMatchServiceTest {
+class MatchServiceTest {
 
   @Mock private MatchClient matchClient;
   @Mock private MatchService matchService;

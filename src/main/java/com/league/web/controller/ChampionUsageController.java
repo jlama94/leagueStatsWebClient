@@ -30,28 +30,9 @@ public class ChampionUsageController {
     championUsageViewMapper = championViewMapper;
   }
 
-
-  // this is not being used anywhere atm
-//  private List<LocalDate> getRecentSevenDates() {
-//    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-//    LocalDate sevenDaysBeforeNow = now.minusDays(6);
-//    LocalDate sevenDaysFromNow = sevenDaysBeforeNow.plusDays(7);
-//
-//    List<LocalDate> localDateList = sevenDaysBeforeNow.datesUntil(sevenDaysFromNow).collect(Collectors.toList());
-//
-//    Collections.sort(localDateList);
-//    return localDateList;
-//  }
-
-  /*
-      - An array of strings representing the dates (7 dates).
-      - Array storing in each slot the number of times champion played per day.
-
-      Map <String, Long[]>
-          -----> { "champId", [12, 3, 4, 5] }
-  */
+  
   @RequestMapping("/summonerLeagueWebV2/{userName}")
-  private MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
+  public MatchUIResponse getSummonerDataV2(@PathVariable String userName) {
 
 
     LocalDate today = LocalDate.now().minusDays(1);
