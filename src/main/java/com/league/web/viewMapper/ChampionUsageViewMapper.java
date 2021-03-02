@@ -50,25 +50,8 @@ public class ChampionUsageViewMapper {
       }
 
 
-      // this just adds zero
-      int timesChampionHasBeenSeen = 0;
-      for (Long championID : championsNotPlayedOnDate) {
-        // gonna add zero for the first case which is the issue
-        // then the following cases
-        String championIdString = String.valueOf(championID);
-        if (!championData.containsKey(championIdString)) {
-          List<Integer> amountOfTimesPlayed2 = new ArrayList<>();
-          amountOfTimesPlayed2.add(timesChampionHasBeenSeen);
-          championData.put(championIdString, amountOfTimesPlayed2);
-        }
-        // this will still add a zero to the champion that has been seen but on a different date.
-        // didnt play with it today, but maybe on a diff day I did
-        else if (championData.containsKey(championIdString)) {
-          List<Integer> currentList = championData.get(championIdString);
-          currentList.add(0);
-          championData.put(championIdString, currentList);
-        }
-      }
+      // this just adds zero for cases when champion has not been seen on a date.
+      championNotSeenOnDate(championData, championsNotPlayedOnDate);
 
 
       for (Map.Entry<Long, List<MiniMatch>> matchesPlayedByChampionIdEntry : matchesPlayedByChampionId.entrySet()) {
@@ -88,9 +71,32 @@ public class ChampionUsageViewMapper {
         }
       }
     }
-
-
     //building our UI object
+    return buildUIobject(championMatchesByDatePlayed, championData);
+  }
+
+  private void championNotSeenOnDate(Map<String, List<Integer>> championData, List<Long> championsNotPlayedOnDate) {
+    int timesChampionHasBeenSeen = 0;
+    for (Long championID : championsNotPlayedOnDate) {
+      // gonna add zero for the first case which is the issue
+      // then the following cases
+      String championIdString = String.valueOf(championID);
+      if (!championData.containsKey(championIdString)) {
+        List<Integer> amountOfTimesPlayed2 = new ArrayList<>();
+        amountOfTimesPlayed2.add(timesChampionHasBeenSeen);
+        championData.put(championIdString, amountOfTimesPlayed2);
+      }
+      // this will still add a zero to the champion that has been seen but on a different date.
+      // didnt play with it today, but maybe on a diff day I did
+      else if (championData.containsKey(championIdString)) {
+        List<Integer> currentList = championData.get(championIdString);
+        currentList.add(0);
+        championData.put(championIdString, currentList);
+      }
+    }
+  }
+
+  private MatchUIResponse buildUIobject(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed, Map<String, List<Integer>> championData) {
     MatchUIResponse matchUIResponse = new MatchUIResponse();
 
     List<MatchUI> temp_match_UI_list = new ArrayList<>();
@@ -136,8 +142,7 @@ public class ChampionUsageViewMapper {
   private Set<Long> getUniqueChampionIds(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
     // recent matches from championMatchesByDatePlayed:
     List<MiniMatch> recentMatches = new ArrayList<>();
-    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet())
-    {
+    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
 
       Map<Long, List<MiniMatch>> entryValue = localDateMapEntry.getValue();
 

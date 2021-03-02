@@ -25,59 +25,10 @@ public class MatchService {
     this.matchClient = matchClient;
   }
 
-
-  // this is not being used atm
-//  public RiotResponse getMatches(String userName) {
-//    return this.matchClient.getMatchesByUserName(userName);
-//  }
-
-  public List<MiniMatch> getRecentMatches(String userName, LocalDate startDate, LocalDate endDate) {
-    RiotResponse riotResponse = this.matchClient.getMatchesByUserName(userName,
-      startDate, endDate);
-
-    List<MiniMatch> miniMatchList = new ArrayList<>();
-    MiniMatch miniMatch;
-    List<RiotMatch> riotResponseMatches = riotResponse.getMatches();
-
-    //Convert timestamps to dates
-    for (RiotMatch match : riotResponseMatches) {
-      miniMatch = new MiniMatch();
-      miniMatch.setChampionId(match.getChampion());
-
-      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("UTC"));
-
-      LocalDate date = tmpDate.toLocalDate();
-
-      miniMatch.setTimestamp(date);
-
-      miniMatchList.add(miniMatch);
-    }
-
-
-//    Filtering Down to 7 Days, but the service client is already doing it? so no filtering?
-    List<MiniMatch> recentMatches = new ArrayList<>();
-
-//    LocalDate now = LocalDate.now(ZoneId.of("America/Chicago"));
-//    LocalDate sevenDaysBeforeNow = now.minusDays(7);
-//
-//    for (MiniMatch match : miniMatchList) {
-//      if (match.getTimestamp().isAfter(sevenDaysBeforeNow)) {
-//        recentMatches.add(match);
-//      }
-//    }
-
-    recentMatches.addAll(miniMatchList);
-
-    // 77 matches for a week -> 7 days?
-    return recentMatches;
-  }
-
-
-
   /*
-      Hardcoded dates from: "ChampionUsageController"
+        Hardcoded dates from: "ChampionUsageController"
         endDate -> LocalDate today = LocalDate.now();
-    startDate -> LocalDate sevenDaysAgoFromToday = today.minusDays(7);
+        startDate -> LocalDate sevenDaysAgoFromToday = today.minusDays(7);
    */
   public TreeMap<LocalDate, Map<Long, List<MiniMatch>>> getMatchesForGraph(String userName,
                                                                            LocalDate startDate,
@@ -86,31 +37,12 @@ public class MatchService {
     RiotResponse riotResponse = matchClient.getMatchesByUserName(userName, startDate, endDate);
 
 
-    List<MiniMatch> miniMatchList = new ArrayList<>();
-    MiniMatch miniMatch;
-
-
-    //Convert timestamps to dates
-    List<RiotMatch> riotResponseMatches = riotResponse.getMatches();
-    for (RiotMatch match : riotResponseMatches) {
-      miniMatch = new MiniMatch();
-      miniMatch.setChampionId(match.getChampion());
-
-      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("UTC"));
-
-      LocalDate date = tmpDate.toLocalDate();
-
-      miniMatch.setTimestamp(date);
-
-      miniMatchList.add(miniMatch);
-    }
-
+    List<MiniMatch> miniMatchList = timestampsToDates(riotResponse);
 
 
     TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed = new TreeMap<>();
 
     for (MiniMatch currentMatch : miniMatchList) {
-
 
       /*
         If map doesnt have entry Date
@@ -177,8 +109,13 @@ public class MatchService {
       /*
         If it doesnt have it, add Date and place an empty Map
      */
+    dateWithNoData(championMatchesByDatePlayed, localDateList);
 
+    return championMatchesByDatePlayed;
 
+  }
+
+  private void dateWithNoData(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed, List<LocalDate> localDateList) {
     for (LocalDate localDate : localDateList) {
       if (!championMatchesByDatePlayed.containsKey(localDate)) {
         Map<Long, List<MiniMatch>> emptyData = new LinkedHashMap<>();
@@ -186,8 +123,29 @@ public class MatchService {
         championMatchesByDatePlayed.put(localDate, emptyData);
       }
     }
-
-    return championMatchesByDatePlayed;
-
   }
+
+
+  //Convert timestamps to dates
+  private List<MiniMatch> timestampsToDates(RiotResponse riotResponse) {
+    List<MiniMatch> miniMatchList = new ArrayList<>();
+    MiniMatch miniMatch;
+    List<RiotMatch> riotResponseMatches = riotResponse.getMatches();
+
+    for (RiotMatch match : riotResponseMatches) {
+      miniMatch = new MiniMatch();
+      miniMatch.setChampionId(match.getChampion());
+
+      LocalDateTime tmpDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(match.getTimestamp()), ZoneId.of("UTC"));
+
+      LocalDate date = tmpDate.toLocalDate();
+
+      miniMatch.setTimestamp(date);
+
+      miniMatchList.add(miniMatch);
+    }
+    return miniMatchList;
+  }
+
+
 }
