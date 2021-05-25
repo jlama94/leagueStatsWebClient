@@ -1,6 +1,7 @@
 package com.league.web.client;
 
 import com.league.web.client.connector.LeagueStatsServiceConnector;
+import com.league.web.httpClient.detailedResponse.DetailedMatchResponse;
 import com.league.web.httpClient.riotResponse.RiotResponse;
 import feign.Feign;
 import feign.jackson.JacksonDecoder;
@@ -22,5 +23,17 @@ public class MatchClient {
       startDate, endDate);
 
     return riotResponse;
+  }
+
+
+  public DetailedMatchResponse getDetailedMatchResponse(String userName, LocalDate startDate, LocalDate endDate) {
+    LeagueStatsServiceConnector leagueStatsServiceConnector = Feign.builder()
+      .decoder(new JacksonDecoder())
+      .target(LeagueStatsServiceConnector.class, "http://localhost:8081");
+
+    DetailedMatchResponse detailedMatchResponse = leagueStatsServiceConnector
+      .getDetailedMatchResponse(userName, startDate, endDate);
+
+    return detailedMatchResponse;
   }
 }

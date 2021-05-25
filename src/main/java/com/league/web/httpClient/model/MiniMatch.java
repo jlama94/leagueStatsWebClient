@@ -1,17 +1,17 @@
 package com.league.web.httpClient.model;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDate;
 
 // simplifies the RiotMatch
+@Builder
 @Getter
-@Setter
 @EqualsAndHashCode
 public class MiniMatch {
-  private LocalDate timestamp;
+  private LocalDate matchDate;
 //  private Long timestamp;
   private Long championId;
 }

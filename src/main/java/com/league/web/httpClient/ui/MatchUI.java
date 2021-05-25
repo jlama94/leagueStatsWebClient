@@ -1,16 +1,10 @@
 package com.league.web.httpClient.ui;
 
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.*;
 
 @EqualsAndHashCode
 @Getter
-@Setter
-@NoArgsConstructor
+@Builder
 public class MatchUI {
   private Integer[] data;
   private String label;
