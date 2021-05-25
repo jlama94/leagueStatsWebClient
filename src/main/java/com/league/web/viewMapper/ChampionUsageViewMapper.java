@@ -3,25 +3,19 @@ package com.league.web.viewMapper;
 import com.league.web.httpClient.model.MiniMatch;
 import com.league.web.httpClient.ui.MatchUI;
 import com.league.web.httpClient.ui.MatchUIResponse;
-import com.league.web.service.MatchService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ChampionUsageViewMapper {
 
-  private MatchService matchService;
-
-  @Autowired
-  public ChampionUsageViewMapper(MatchService matchService) {
-    this.matchService = matchService;
-  }
+  public ChampionUsageViewMapper() {}
 
 
-  public MatchUIResponse buildMatchUIResponse(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
+  public MatchUIResponse buildMatchUIResponse(Map<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
 
 
     Set<Long> allUniqueChampionsIDs = getUniqueChampionIds(championMatchesByDatePlayed);
@@ -36,19 +30,12 @@ public class ChampionUsageViewMapper {
       Map<Long, List<MiniMatch>> matchesPlayedByChampionId = championMatchesByDatePlayedEntry.getValue();
       Set<Long> championsPlayedOnDate = matchesPlayedByChampionId.keySet();
 
-
       // If the keys aren't in this map, then the champion hasn't been played this day
       // and championData needs to be updated to have 0 for that championId
 
       // Checking allChampions with the championList on currentDate
       // if there is a champion not in championList on currentDate add to list
-      List<Long> championsNotPlayedOnDate = new ArrayList<>();
-      for (Long uniqueChampionsID : allUniqueChampionsIDs) {
-        if (!championsPlayedOnDate.contains(uniqueChampionsID)) {
-          championsNotPlayedOnDate.add(uniqueChampionsID);
-        }
-      }
-
+      List<Long> championsNotPlayedOnDate = getChampionIdsNotPlayedOnDate(allUniqueChampionsIDs, championsPlayedOnDate);
 
       // this just adds zero for cases when champion has not been seen on a date.
       championNotSeenOnDate(championData, championsNotPlayedOnDate);
@@ -75,6 +62,16 @@ public class ChampionUsageViewMapper {
     return buildUIobject(championMatchesByDatePlayed, championData);
   }
 
+  private List<Long> getChampionIdsNotPlayedOnDate(Set<Long> allUniqueChampionsIDs, Set<Long> championsPlayedOnDate) {
+    List<Long> championsNotPlayedOnDate = new ArrayList<>();
+    for (Long uniqueChampionsID : allUniqueChampionsIDs) {
+      if (!championsPlayedOnDate.contains(uniqueChampionsID)) {
+        championsNotPlayedOnDate.add(uniqueChampionsID);
+      }
+    }
+    return championsNotPlayedOnDate;
+  }
+
   private void championNotSeenOnDate(Map<String, List<Integer>> championData, List<Long> championsNotPlayedOnDate) {
     int timesChampionHasBeenSeen = 0;
     for (Long championID : championsNotPlayedOnDate) {
@@ -82,13 +79,13 @@ public class ChampionUsageViewMapper {
       // then the following cases
       String championIdString = String.valueOf(championID);
       if (!championData.containsKey(championIdString)) {
-        List<Integer> amountOfTimesPlayed2 = new ArrayList<>();
-        amountOfTimesPlayed2.add(timesChampionHasBeenSeen);
-        championData.put(championIdString, amountOfTimesPlayed2);
+        List<Integer> amountOfTimesPlayed = new ArrayList<>();
+        amountOfTimesPlayed.add(timesChampionHasBeenSeen);
+        championData.put(championIdString, amountOfTimesPlayed);
       }
       // this will still add a zero to the champion that has been seen but on a different date.
       // didnt play with it today, but maybe on a diff day I did
-      else if (championData.containsKey(championIdString)) {
+      else  {
         List<Integer> currentList = championData.get(championIdString);
         currentList.add(0);
         championData.put(championIdString, currentList);
@@ -96,18 +93,24 @@ public class ChampionUsageViewMapper {
     }
   }
 
-  private MatchUIResponse buildUIobject(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed, Map<String, List<Integer>> championData) {
+  private MatchUIResponse buildUIobject(Map<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed,
+                                        Map<String, List<Integer>> championData) {
     MatchUIResponse matchUIResponse = new MatchUIResponse();
 
-    List<MatchUI> temp_match_UI_list = new ArrayList<>();
-    MatchUI matchUI;
-    Integer[] data;
+    //TODO Make this into a stream Julio
+//    List<String> dateLabels = new ArrayList<>();
+//    // set Data labels
+//    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
+//      dateLabels.add(localDateMapEntry.getKey().toString());
+//    }
 
-    List<String> dateLabels = new ArrayList<>();
-    // set Data labels
-    for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
-      dateLabels.add(localDateMapEntry.getKey().toString());
-    }
+    List<String> dateLabels = championMatchesByDatePlayed.keySet().stream()
+      .map(LocalDate::toString)
+      .collect(Collectors.toList());
+
+//    championMatchesByDatePlayed.forEach((key, value) -> dateLabels.add(key.toString()));
+
+
 
 
     String[] labelsArray = new String[dateLabels.size()];
@@ -115,14 +118,12 @@ public class ChampionUsageViewMapper {
 
     matchUIResponse.setDateLabels(labelsArray);
 
+    List<MatchUI> temp_match_UI_list = new ArrayList<>();
 
     for (Map.Entry<String, List<Integer>> entry : championData.entrySet()) {
-      matchUI = new MatchUI();
-      matchUI.setLabel(entry.getKey());
+      Integer[] data = new Integer[entry.getValue().size()];
 
-      data = new Integer[entry.getValue().size()];
-
-      matchUI.setData(entry.getValue().toArray(data));
+      MatchUI matchUI = MatchUI.builder().label(entry.getKey()).data(entry.getValue().toArray(data)).build();
 
 
       if (!temp_match_UI_list.contains(matchUI)) {
@@ -139,8 +140,10 @@ public class ChampionUsageViewMapper {
     return matchUIResponse;
   }
 
-  private Set<Long> getUniqueChampionIds(TreeMap<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
+  private Set<Long> getUniqueChampionIds(Map<LocalDate, Map<Long, List<MiniMatch>>> championMatchesByDatePlayed) {
     // recent matches from championMatchesByDatePlayed:
+
+    //TODO Use a Stream to make this map
     List<MiniMatch> recentMatches = new ArrayList<>();
     for (Map.Entry<LocalDate, Map<Long, List<MiniMatch>>> localDateMapEntry : championMatchesByDatePlayed.entrySet()) {
 
@@ -152,10 +155,10 @@ public class ChampionUsageViewMapper {
     }
 
     //Unique champion ids
-    Set<Long> allUniqueChampionsIDs = new HashSet<>();
-    for (MiniMatch recentMatch : recentMatches) {
-      allUniqueChampionsIDs.add(recentMatch.getChampionId());
-    }
+    Set<Long> allUniqueChampionsIDs = recentMatches.stream()
+      .map(MiniMatch::getChampionId)
+      .collect(Collectors.toSet());
+
     return allUniqueChampionsIDs;
   }
 }
