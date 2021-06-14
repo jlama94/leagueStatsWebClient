@@ -1,0 +1,27 @@
+#spring:
+#  config:
+#    activate:
+#      on-profile: dev
+
+
+
+
+
+#environment:
+#  name: dev-profile
+#  environment: dev-enviroment
+#  enabled: false
+#  lol-service-application-target: http://localhost:8080
+
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+
+environment:
+  name: prod-profile
+  environment: prod-environment
+  enabled: true
+  lol-service-application-target: http://leagueoflegendsstatsapplication-env.eba-v35q733p.us-east-2.elasticbeanstalk.com

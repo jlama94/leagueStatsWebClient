@@ -3,6 +3,7 @@ package com.league.web.controller;
 import com.league.web.httpClient.detailedResponse.DetailedMatchResponse;
 import com.league.web.httpClient.detailedResponse.Match;
 import com.league.web.httpClient.model.*;
+import com.league.web.httpClient.testingObjectModel.ChampionsInformationResponse;
 import com.league.web.httpClient.ui.MatchUIResponse;
 import com.league.web.service.MatchService;
 import com.league.web.viewMapper.ChampionUsageViewMapper;
@@ -47,57 +48,19 @@ public class ChampionUsageController {
   }
 
   /*
-      response: {
-          champions: ['A', 'B', 'C'],
 
-          WinsObject: {
-            name: 'Wins',
-            winsCountPerChampion: [3,  1, 7]
-          },
+    ResponseObject: {
 
-          LossObject: {
-            name: 'Losses',
-            lossCountPerChampion: [1, 4, 2]
-          }
-       }
+          Long[] championIds = [11, 21, 31, 41]
+          Map<String, List<Int> > wins;
+                      - List<Int> = [7, 8, 9, 1, 0]  <- where each number represents the total number of wins for
+                                                        different champions
+
+          Map<String, List<Int>> losses;
+      }
    */
-
-  @RequestMapping("/fakeData")
-  public MatchHistoryTracker getStackedBarChartData() {
-    // building losses
-    List<Integer> lossesCounter = new ArrayList<>();
-    lossesCounter.add(1);
-    lossesCounter.add(4);
-    lossesCounter.add(2);
-
-    Loss losses = Loss.builder()
-      .losses(lossesCounter)
-      .build();
-
-
-    // building wins
-    List<Integer> winsCounter = new ArrayList<>();
-    winsCounter.add(3);
-    winsCounter.add(1);
-    winsCounter.add(7);
-
-    Win wins = Win.builder()
-      .wins(winsCounter)
-      .build();
-
-
-    MatchHistoryTracker matchHistoryTracker = MatchHistoryTracker
-      .builder()
-      .loss(losses)
-      .win(wins)
-      .build();
-
-    return matchHistoryTracker;
-  }
-
-
   @RequestMapping("/matches/v2/{userName}")
-  public DetailedMatchResponse getDetailedMatchResponse(@PathVariable String userName) {
+  public ChampionsInformationResponse getDetailedMatchResponse(@PathVariable String userName) {
 
     LocalDate today = LocalDate.now().minusDays(1);
     LocalDate sevenDaysAgoFromToday = today.minusDays(6);
@@ -107,40 +70,18 @@ public class ChampionUsageController {
       .getDetailedMatchResponse(userName, sevenDaysAgoFromToday, today);
 
 
-    /*
-      How do i count the number of wins and losses?
-      - Make two lists, where each list is of wins and losses?
-      - Then I just count the number of matches within each list of wins and losses?
+    ChampionsInformationResponse result = new ChampionsInformationResponse();
 
 
-
-        	Map<Long, Map<String, Long>>
-
-
-              Champion Id - 1
-                Wins
-                   2
-                Loss
-                   8
-
-
-
-     */
-
-    Map<Long, Map<String, Integer>> detailedInformation = new LinkedHashMap<>();
-
-    /*
-      Start again
-      Case when first entry is a win, update the loss counter
-      Case when first entry is a loss, update the win counter
-     */
+    Map<Long, Map<String, Integer>> championInformation = new LinkedHashMap<>();
     for (Match match : response.getMatches()) {
+
       // 1st case: first entry is a win
       boolean isWin = match.isWin();
 
       if (isWin) {
         // no champs yet
-        if (!detailedInformation.containsKey(match.getChampion())) {
+        if (!championInformation.containsKey(match.getChampion())) {
 
           Map<String, Integer> winsAndLosses = new LinkedHashMap<>();
 
@@ -150,41 +91,96 @@ public class ChampionUsageController {
           winsAndLosses.put("losses", 0);
 
           // put first entry on outer map
-          detailedInformation.put(match.getChampion(), winsAndLosses);
+          championInformation.put(match.getChampion(), winsAndLosses);
+
         }
 
         // 2 case: it is a win and we have seen this champion already
         else {
-          Map<String, Integer> matchHistory = detailedInformation.get(match.getChampion());
+          Map<String, Integer> matchHistory = championInformation.get(match.getChampion());
           // update the counter of that match history
           Integer winsSoFar = matchHistory.get("wins");
           int updatedWins = winsSoFar + 1;
           matchHistory.put("wins", updatedWins);
 
-          detailedInformation.put(match.getChampion(), matchHistory);
+          championInformation.put(match.getChampion(), matchHistory);
+
         }
       }
 //       else 2nd case: it is a loss
       else {
-        // it's a loss and we havent seen the champion yet?
-        if (!detailedInformation.containsKey(match.getChampion())) {
+        // it's a loss and we haven't seen the champion yet
+        if (!championInformation.containsKey(match.getChampion())) {
           Map<String, Integer> winsAndLosses = new LinkedHashMap<>();
           winsAndLosses.put("losses", 1);
           winsAndLosses.put("wins", 0);
-          detailedInformation.put(match.getChampion(), winsAndLosses);
+          championInformation.put(match.getChampion(), winsAndLosses);
         } else {
-          Map<String, Integer> matchHistory = detailedInformation.get(match.getChampion());
+          Map<String, Integer> matchHistory = championInformation.get(match.getChampion());
           Integer lossesCounter = matchHistory.get("losses");
           int updatedLosses = lossesCounter + 1;
 
           matchHistory.put("losses", updatedLosses);
 
-          detailedInformation.put(match.getChampion(), matchHistory);
+          championInformation.put(match.getChampion(), matchHistory);
 
         }
       }
+
+      /*
+          Pass current information from DetailedInformation to SuperDetailedInfo
+      "267": {
+        "wins": 4,
+        "losses": 2
+    },
+    "350": {
+        "losses": 4,
+        "wins": 3
+    }
+   */
+
+
+      /*
+          1) an Array of of champions Ids
+       */
+
+
+      List<String> championIds = new ArrayList<>();
+
+      Map<String, List<Integer>> wins = new LinkedHashMap<>();
+      Map<String, List<Integer>> losses = new LinkedHashMap<>();
+
+
+      List<Integer> winsList = new ArrayList<>();
+      List<Integer> lossList = new ArrayList<>();
+
+      for (Map.Entry<Long, Map<String, Integer>> entry : championInformation.entrySet()) {
+        long champion = entry.getKey();
+        // adding all champions to champions list
+        if (!championIds.contains(String.valueOf(champion))) {
+          championIds.add(String.valueOf(champion));
+        }
+
+        // wins or loss entries
+        Map<String, Integer> winsOrLossesEntry = entry.getValue();
+        if (winsOrLossesEntry.containsKey("wins")) {
+          winsList.add(winsOrLossesEntry.get("wins")); // add the values for wins
+        }
+        if (winsOrLossesEntry.containsKey("losses")) {
+          lossList.add(winsOrLossesEntry.get("losses")); // add the values for losses
+        }
+      }
+
+      // response
+      wins.put("wins", winsList);
+      result.setWins(wins);
+
+      losses.put("losses", lossList);
+      result.setLosses(losses);
+
+      result.setChampionIds(championIds);
     }
 
-    return matchService.getDetailedMatchResponse(userName, sevenDaysAgoFromToday, today);
+    return result;
   }
 }
